@@ -1,0 +1,22 @@
+sudo: required
+services:
+    - docker
+
+before_install:
+  - docker build -t yuency/react-test -f ./client/Dockerfile.dev ./client/Dockerfile.dev
+
+script:
+  - docker run yuency/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t yuency/dockermulticontainerapp-client ./client
+  - docker build -t yuency/dockermulticontainerapp-nginx ./nginx
+  - docker build -t yuency/dockermulticontainerapp-server ./server
+  - docker build -t yuency/dockermulticontainerapp-worker ./worker
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push to docker hub
+  - docker push yuency/dockermulticontainerapp-client
+  - docker push yuency/dockermulticontainerapp-nginx
+  - docker push yuency/dockermulticontainerapp-server
+  - docker push yuency/dockermulticontainerapp-worker
